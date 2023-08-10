@@ -1,6 +1,8 @@
+const { internalErrorMessage } = require('../constants');
+
 class InternalServerError extends Error {
   constructor() {
-    super('На сервере произошла ошибка');
+    super(internalErrorMessage);
     this.statusCode = 500;
   }
 }

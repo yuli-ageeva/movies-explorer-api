@@ -6,8 +6,15 @@ const RequestError = require('../errors/RequestError');
 const AuthError = require('../errors/AuthError');
 const ConflictError = require('../errors/ConflictError');
 const appConfig = require('../config');
-
-const saltRounds = 10;
+const {
+  loginErrorMessage,
+  userAlreadyExistsErrorMessage,
+  userNotFoundErrorMessage,
+  userCreationErrorMessage,
+  getUserErrorMessage,
+  updateUserErrorMessage,
+  saltRounds,
+} = require('../constants');
 
 function getUserProfile(req, res, next) {
   const userId = req.user._id;
@@ -15,13 +22,13 @@ function getUserProfile(req, res, next) {
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        throw new NotFoundError('Пользователь не найден');
+        throw new NotFoundError(userNotFoundErrorMessage);
       }
       res.send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return next(new RequestError('Передано некорректное id пользователя'));
+        return next(new RequestError(getUserErrorMessage));
       }
       return next(err);
     });
@@ -45,9 +52,9 @@ function createUser(req, res, next) {
     })
     .catch((err) => {
       if (err.code === 11000) {
-        next(new ConflictError('Пользователь с таким email уже существует.'));
+        next(new ConflictError(userAlreadyExistsErrorMessage));
       } else if (err.name === 'ValidationError') {
-        return next(new RequestError('При регистрации пользователя произошла ошибка.'));
+        return next(new RequestError(userCreationErrorMessage));
       }
       return next(err);
     });
@@ -60,13 +67,13 @@ function updateUserProfile(req, res, next) {
   User.findByIdAndUpdate(userId, { name, email }, { new: true })
     .then((user) => {
       if (!user) {
-        throw new NotFoundError('Пользователь по указанному _id не найден');
+        throw new NotFoundError(userNotFoundErrorMessage);
       }
       res.send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return next(new RequestError('Переданы некорректные данные при обновлении пользователя'));
+        return next(new RequestError(updateUserErrorMessage));
       }
       return next(err);
     });
@@ -78,16 +85,16 @@ function login(req, res, next) {
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return next(new AuthError('Вы ввели неправильный логин или пароль.'));
+        return next(new AuthError(loginErrorMessage));
       }
 
       return bcrypt.compare(password, user.password, (err, matched) => {
         if (err) {
-          return next(new AuthError('Вы ввели неправильный логин или пароль.'));
+          return next(new AuthError(loginErrorMessage));
         }
 
         if (!matched) {
-          return next(new AuthError('Вы ввели неправильный логин или пароль.'));
+          return next(new AuthError(loginErrorMessage));
         }
         const payload = { _id: user._id };
         const token = jwt.sign(payload, appConfig.jwtSecret, { expiresIn: '7d' });
