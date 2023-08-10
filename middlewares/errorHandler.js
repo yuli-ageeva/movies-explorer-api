@@ -13,7 +13,6 @@ function errorHandler() {
       || err instanceof AuthError
       || err instanceof ConflictError
       || err instanceof ForbiddenError
-
     )
       ? err
       : new InternalServerError();

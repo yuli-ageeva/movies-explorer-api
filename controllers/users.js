@@ -5,7 +5,9 @@ const NotFoundError = require('../errors/NotFoundError');
 const RequestError = require('../errors/RequestError');
 const AuthError = require('../errors/AuthError');
 const ConflictError = require('../errors/ConflictError');
-const { jwtSecret } = require('../utils/jwtSecretProvider');
+const appConfig = require('../config');
+
+const saltRounds = 10;
 
 function getUserProfile(req, res, next) {
   const userId = req.user._id;
@@ -29,7 +31,6 @@ function createUser(req, res, next) {
   const {
     name, email, password,
   } = req.body;
-  const saltRounds = 10;
 
   bcrypt.hash(password, saltRounds)
     .then((hash) => User.create({
@@ -52,17 +53,9 @@ function createUser(req, res, next) {
     });
 }
 
-function checkLength(n, min, max, errMsg) {
-  if (n === undefined) return;
-  if (n.length < min || n.length > max) {
-    throw new RequestError(errMsg);
-  }
-}
-
 function updateUserProfile(req, res, next) {
   const { name, email } = req.body;
   const userId = req.user._id;
-  checkLength(name, 2, 30, 'Переданы некорректные данные при обновлении пользователя');
 
   User.findByIdAndUpdate(userId, { name, email }, { new: true })
     .then((user) => {
@@ -88,21 +81,20 @@ function login(req, res, next) {
         return next(new AuthError('Вы ввели неправильный логин или пароль.'));
       }
 
-      return bcrypt.compare(password, user.password, (err, isMatch) => {
+      return bcrypt.compare(password, user.password, (err, matched) => {
         if (err) {
-          return next(new RequestError('Ошибка при проверке пароля'));
+          return next(new AuthError('Вы ввели неправильный логин или пароль.'));
         }
 
-        if (!isMatch) {
+        if (!matched) {
           return next(new AuthError('Вы ввели неправильный логин или пароль.'));
         }
         const payload = { _id: user._id };
-        const token = jwt.sign(payload, jwtSecret(), { expiresIn: '7d' });
+        const token = jwt.sign(payload, appConfig.jwtSecret, { expiresIn: '7d' });
 
         res.cookie('jwt', token, {
           httpOnly: true,
           sameSite: 'strict',
-          // secure: true,
         });
         return res.status(200).send({
           _id: user._id,

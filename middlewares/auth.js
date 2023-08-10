@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const AuthError = require('../errors/AuthError');
-const { jwtSecret } = require('../utils/jwtSecretProvider');
+const appConfig = require('../config');
 
 const auth = (req, res, next) => {
   const jwtToken = req.cookies.jwt;
@@ -8,15 +8,12 @@ const auth = (req, res, next) => {
     throw new AuthError('При авторизации произошла ошибка. Токен не передан или передан не в том формате.');
   }
 
-  let payload;
   try {
-    payload = jwt.verify(jwtToken, jwtSecret());
+    req.user = jwt.verify(jwtToken, appConfig.jwtSecret);
+    next();
   } catch (err) {
     throw new AuthError('При авторизации произошла ошибка. Переданный токен некорректен.');
   }
-
-  req.user = payload;
-  next();
 };
 
 module.exports = auth;

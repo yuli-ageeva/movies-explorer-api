@@ -4,7 +4,7 @@ const RequestError = require('../errors/RequestError');
 const ForbiddenError = require('../errors/ForbiddenError');
 
 function getMovies(req, res, next) {
-  Movie.find({}).sort({ createdAt: -1 })
+  Movie.find({ owner: req.user._id }).sort({ createdAt: -1 })
     .then((movies) => {
       res.send(movies);
     })
@@ -51,10 +51,10 @@ function createMovie(req, res, next) {
 }
 
 function deleteMovie(req, res, next) {
-  const { movieId } = req.params;
+  const id = req.params._id;
   const userId = req.user._id;
 
-  Movie.findById(movieId)
+  Movie.findById(id)
     .then((movie) => {
       if (!movie) {
         throw new NotFoundError('Карточка не найдена');
@@ -63,7 +63,7 @@ function deleteMovie(req, res, next) {
       if (movie.owner.toString() !== userId) {
         throw new ForbiddenError('У вас нет прав на удаление этой карточки');
       }
-      return Movie.findByIdAndRemove(movieId);
+      return Movie.findByIdAndRemove(id);
     })
     .then((deletedMovie) => {
       res.send(deletedMovie);
