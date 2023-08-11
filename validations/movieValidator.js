@@ -1,5 +1,7 @@
 const { celebrate, Joi } = require('celebrate');
 
+const movieRegex = /^(http|https):\/\/(?:www\.)?[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]+(?:#.+)?$/;
+
 const validateCreateMovie = celebrate({
   body: Joi.object().keys({
     country: Joi.string().required(),
@@ -7,9 +9,9 @@ const validateCreateMovie = celebrate({
     duration: Joi.number().required(),
     year: Joi.string().required(),
     description: Joi.string().required(),
-    image: Joi.string().required().uri(),
-    trailerLink: Joi.string().required().uri(),
-    thumbnail: Joi.string().required().uri(),
+    image: Joi.string().required().regex(movieRegex),
+    trailerLink: Joi.string().required().regex(movieRegex),
+    thumbnail: Joi.string().required().regex(movieRegex),
     movieId: Joi.number().required(),
     nameRU: Joi.string().required(),
     nameEN: Joi.string().required(),

@@ -64,7 +64,7 @@ function updateUserProfile(req, res, next) {
   const { name, email } = req.body;
   const userId = req.user._id;
 
-  User.findByIdAndUpdate(userId, { name, email }, { new: true })
+  User.findByIdAndUpdate(userId, { name, email }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
         throw new NotFoundError(userNotFoundErrorMessage);
@@ -72,7 +72,9 @@ function updateUserProfile(req, res, next) {
       res.send(user);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.code === 11000) {
+        return next(new ConflictError(userAlreadyExistsErrorMessage));
+      } if (err.name === 'ValidationError') {
         return next(new RequestError(updateUserErrorMessage));
       }
       return next(err);
@@ -113,7 +115,7 @@ function login(req, res, next) {
     .catch(next);
 }
 
-function logout(req, res, _next) {
+function logout(req, res) {
   return res.status(204).clearCookie('jwt').end();
 }
 

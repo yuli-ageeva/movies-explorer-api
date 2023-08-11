@@ -10,13 +10,13 @@ const movieRoutes = require('./movies');
 const { pageNotFoundErrorMessage } = require('../constants');
 
 router.post('/signin', validateUserLogin, login);
-router.post('/signout', logout);
+router.post('/signout', auth, logout);
 router.post('/signup', validateUserCreation, createUser);
 
 router.use('/users', auth, userRoutes);
 router.use('/movies', auth, movieRoutes);
-router.use((_req, _res) => {
-  throw new NotFoundError(pageNotFoundErrorMessage);
+router.use(auth, (req, res, next) => {
+  next(new NotFoundError(pageNotFoundErrorMessage));
 });
 
 module.exports = router;
