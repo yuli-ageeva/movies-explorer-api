@@ -16,6 +16,14 @@ const {
   saltRounds,
 } = require('../constants');
 
+function cookieOptions() {
+  return {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+  };
+}
+
 function getUserProfile(req, res, next) {
   const userId = req.user._id;
 
@@ -74,7 +82,8 @@ function updateUserProfile(req, res, next) {
     .catch((err) => {
       if (err.code === 11000) {
         return next(new ConflictError(userAlreadyExistsErrorMessage));
-      } if (err.name === 'ValidationError') {
+      }
+      if (err.name === 'ValidationError') {
         return next(new RequestError(updateUserErrorMessage));
       }
       return next(err);
@@ -101,10 +110,7 @@ function login(req, res, next) {
         const payload = { _id: user._id };
         const token = jwt.sign(payload, appConfig.jwtSecret, { expiresIn: '7d' });
 
-        res.cookie('jwt', token, {
-          httpOnly: true,
-          sameSite: 'strict',
-        });
+        res.cookie('jwt', token, cookieOptions());
         return res.status(200).send({
           _id: user._id,
           name: user.name,
