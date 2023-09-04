@@ -51,7 +51,6 @@ const movieSchema = new mongoose.Schema(
     movieId: {
       type: 'Number',
       required: true,
-      unique: true,
     },
     nameRU: {
       type: 'String',
@@ -63,6 +62,8 @@ const movieSchema = new mongoose.Schema(
     },
   },
 );
+
+movieSchema.index({owner: 1, movieId: 1}, {unique: true})
 
 const Movie = mongoose.model('movie', movieSchema);
 module.exports = {
