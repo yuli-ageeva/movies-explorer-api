@@ -4,6 +4,8 @@
 Проект представляет собой платформу по поиску фильмов,
 с возможностью добавлять понравившиеся фильмы в избранное.
 
+Технологии: Node.js, Express.js, MongoDB, RESTful API
+
 Адрес репозитория:https://github.com/yuli-ageeva/movies-explorer-api
 
 ## Ссылкa на проект
